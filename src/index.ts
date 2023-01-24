@@ -21,7 +21,7 @@ const {
 
 let sdk: AztecSdk;
 
-async function go() {
+async function main() {
 
     const ethereumProvider = new JsonRpcProvider(ETHEREUM_HOST);
     const walletProvider = new WalletProvider(ethereumProvider);
@@ -41,3 +41,4 @@ async function go() {
 
 }
 
+main();
