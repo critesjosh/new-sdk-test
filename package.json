@@ -10,7 +10,7 @@
   },
   "license": "ISC",
   "dependencies": {
-    "@aztec/sdk": "2.2.0-alpha.0",
+    "@aztec/sdk": "2.2.0-alpha.1",
     "dotenv": "^16.0.1",
     "ethers": "^5.6.6",
     "isomorphic-fetch": "^3.0.0",

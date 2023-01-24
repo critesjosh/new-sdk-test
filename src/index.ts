@@ -8,26 +8,33 @@ import {
     RecoveryKeyStore,
     TxSettlementTime,
     WalletProvider,
-    EthereumRpc, JsonRpcProvider,
+    EthereumRpc, 
+    JsonRpcProvider, 
+    randomBytes, 
+    Permission, 
+    KeyStore, 
+    VanillaAztecWalletProvider
 } from '@aztec/sdk';
 
 
-const {
-    ETHEREUM_HOST = 'http://localhost:8545',
+const ETHEREUM_HOST = 'http://localhost:8545',
     ROLLUP_HOST = 'http://localhost:8081',
-    PRIVATE_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
-    ADDRESS = EthAddress.fromString("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"),
-} = process.env;
+    mnemonic = "test test test test test test test test test test test junk",
+    ADDRESS = EthAddress.fromString("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")
 
-let sdk: AztecSdk;
+let sdk: AztecSdk,
+    aztecWalletProvider: VanillaAztecWalletProvider,
+    alias,
+    keystore: KeyStore,
+    ethWalletProvider: WalletProvider;
 
-async function main() {
+async function setup() {
 
     const ethereumProvider = new JsonRpcProvider(ETHEREUM_HOST);
-    const walletProvider = new WalletProvider(ethereumProvider);
-    walletProvider.addAccount(Buffer.from("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80", "hex"))
+    ethWalletProvider = new WalletProvider(ethereumProvider);
+    ethWalletProvider.addAccountsFromMnemonic(mnemonic, 5);
 
-    sdk = await createAztecSdk(walletProvider, {
+    sdk = await createAztecSdk(ethWalletProvider, {
         serverUrl: ROLLUP_HOST,
         memoryDb: true,
         minConfirmation: 1,
@@ -36,9 +43,61 @@ async function main() {
     await sdk.run();
     await sdk.awaitSynchronised();
 
-    const keyStore = sdk.createLegacyKeyStore(ADDRESS as EthAddress);
-    await sdk.createAztecWalletProvider(keyStore);
+    keystore = sdk.createLegacyKeyStore(ADDRESS as EthAddress);
+    aztecWalletProvider = await sdk.createAztecWalletProvider(keystore);
+    await aztecWalletProvider.connect()
 
+    await sdk.addAccount(aztecWalletProvider);
+
+    let newPermissions: Permission[] = [{ assets: [0] }, { assets: [1] }]
+    await aztecWalletProvider.setPermissions(newPermissions)
+    let updatedPermissions = await aztecWalletProvider.getPermissions();
+
+    updatedPermissions.map((p) => {
+        p.assets.map((a) => {
+            console.log("asset", a)
+        })
+    })
+
+    // console.log(ethWalletProvider.getAccount(0))
 }
 
-main();
+async function register() {
+    let assetId = 0;
+    alias = randomBytes(8).toString('hex');
+    const depositValue = sdk.toBaseUnits(assetId, '0.005');
+    const fee = (await sdk.getRegisterFees(assetId))[TxSettlementTime.INSTANT];
+
+    const controller = sdk.createRegisterController(
+        await aztecWalletProvider.getAccountPublicKey(),
+        alias,
+        await aztecWalletProvider.getSpendingPublicKey(),
+        undefined, // no recovery key
+        depositValue,
+        fee,
+        //@ts-ignore
+        ethWalletProvider.getAccount(0),
+    );
+
+    if ((await controller.getPendingFunds()) < depositValue.value) {
+        await controller.depositFundsToContract();
+        await controller.awaitDepositFundsToContract();
+    }
+
+    await controller.createProofs();
+    await controller.sign();
+    await controller.send();
+    // await controller.awaitSettlement();
+    let txIds = controller.getTxIds();
+
+    txIds.map((txId)=> {
+        console.log(txId)
+    })
+}
+
+async function run() {
+    await setup();
+    await register();
+}
+
+run();

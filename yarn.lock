@@ -22,6 +22,26 @@
     supports-color "7.2.0"
     tslib "^2.0.0"
 
+"@aztec/barretenberg@2.2.0-alpha.1":
+  version "2.2.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@aztec/barretenberg/-/barretenberg-2.2.0-alpha.1.tgz#bc8a6711418ab91af71aa02c524ddc2829371dc0"
+  integrity sha512-7vvQN9aKv6kCPz5PZWgLuvykyVvtYssmMc9J5RU4gl1eWsLGakzMPMhG/I155HPAVyHvQivNcFxVez4Y1WfYBQ==
+  dependencies:
+    "@types/levelup" "^4.3.0"
+    browserify-cipher "^1.0.1"
+    cross-fetch "^3.1.5"
+    debug "^4.3.4"
+    detect-node "^2.1.0"
+    fs-extra "10.0.0"
+    hash.js "^1.1.7"
+    leveldown "^6.1.1"
+    levelup "^5.1.1"
+    memdown "^6.1.1"
+    promise-readable "^5.0.4"
+    sha3 "^2.1.3"
+    supports-color "7.2.0"
+    tslib "^2.0.0"
+
 "@aztec/blockchain@2.1.78":
   version "2.1.78"
   resolved "https://registry.yarnpkg.com/@aztec/blockchain/-/blockchain-2.1.78.tgz#fdb2b28ee157848666f179e492dafd08ad7d55ca"
@@ -40,12 +60,12 @@
     ethers "5.5.1"
     sha3 "^2.1.4"
 
-"@aztec/sdk@2.2.0-alpha.0":
-  version "2.2.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/@aztec/sdk/-/sdk-2.2.0-alpha.0.tgz#541058b8eb8f538a5a6433f3983fea01a5520b62"
-  integrity sha512-wej+okOf5jCRppUIpwbmidI+IBjCQ9ZNKDmbqkfYwzbbKr+A0VrBx4ccrmNwYu6ymX+Z51d+aKFtLozTdAV/rg==
+"@aztec/sdk@2.2.0-alpha.1":
+  version "2.2.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@aztec/sdk/-/sdk-2.2.0-alpha.1.tgz#e1aa3781511e97823caffd0be5ca7951a07db1fe"
+  integrity sha512-TRnGJfI+XY+gU3/rwmna/L5AIAFmFI/KHySSF8050nkCmOcTSW6lWY7v+BZHQ1LCCnKH+kQGdBAASueh4FCc8w==
   dependencies:
-    "@aztec/barretenberg" "2.1.78"
+    "@aztec/barretenberg" "2.2.0-alpha.1"
     "@aztec/blockchain" "2.1.78"
     detect-node "^2.1.0"
     dexie "3.0.1"
