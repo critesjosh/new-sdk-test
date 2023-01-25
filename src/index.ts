@@ -8,12 +8,13 @@ import {
     RecoveryKeyStore,
     TxSettlementTime,
     WalletProvider,
-    EthereumRpc, 
-    JsonRpcProvider, 
-    randomBytes, 
-    Permission, 
-    KeyStore, 
-    VanillaAztecWalletProvider
+    EthereumRpc,
+    JsonRpcProvider,
+    randomBytes,
+    Permission,
+    KeyStore,
+    VanillaAztecWalletProvider,
+    ProofRequestOptions
 } from '@aztec/sdk';
 
 
@@ -26,6 +27,7 @@ let sdk: AztecSdk,
     aztecWalletProvider: VanillaAztecWalletProvider,
     alias,
     keystore: KeyStore,
+    accountPublicKey: GrumpkinAddress,
     ethWalletProvider: WalletProvider;
 
 async function setup() {
@@ -47,7 +49,7 @@ async function setup() {
     aztecWalletProvider = await sdk.createAztecWalletProvider(keystore);
     await aztecWalletProvider.connect()
 
-    await sdk.addAccount(aztecWalletProvider);
+    accountPublicKey = await sdk.addAccount(aztecWalletProvider);
 
     let newPermissions: Permission[] = [{ assets: [0] }, { assets: [1] }]
     await aztecWalletProvider.setPermissions(newPermissions)
@@ -75,8 +77,7 @@ async function register() {
         undefined, // no recovery key
         depositValue,
         fee,
-        //@ts-ignore
-        ethWalletProvider.getAccount(0),
+        ethWalletProvider.getAccount(0) as any,
     );
 
     if ((await controller.getPendingFunds()) < depositValue.value) {
@@ -90,14 +91,68 @@ async function register() {
     // await controller.awaitSettlement();
     let txIds = controller.getTxIds();
 
-    txIds.map((txId)=> {
+    txIds.map((txId) => {
         console.log(txId)
     })
+    await sdk.destroy();
+
+}
+
+async function deposit() {
+    const assetId = 0;
+    const depositValue = sdk.toBaseUnits(assetId, '0.1');
+    const fee = (await sdk.getDepositFees(assetId))[TxSettlementTime.INSTANT];
+
+    const controller = sdk.createDepositController(
+        ethWalletProvider.getAccount(0) as any, 
+        depositValue, 
+        fee, 
+        accountPublicKey,
+        false // send to unregistered account
+        );
+    await controller.createProofs();
+
+    if ((await controller.getPendingFunds()) < depositValue.value) {
+        await controller.depositFundsToContract();
+        await controller.awaitDepositFundsToContract();
+    }
+
+    await controller.sign();
+    await controller.send();
+    await sdk.destroy();
+}
+
+async function withdraw() {
+    const assetId = 0;
+    const withdrawValue = sdk.toBaseUnits(assetId, '0.03');
+    const fee = (await sdk.getWithdrawFees(assetId))[TxSettlementTime.INSTANT];
+
+    let options: ProofRequestOptions = {
+        excludedNullifiers: undefined, // when would this be used?
+        excludePendingNotes: true, // when would this false?
+        useAccountKey: true,  // create the signer from the account key
+        allowChain: true,     // allow notes to be chained
+        hideNoteCreator: true // hide the sender of the transaction
+    }
+
+    const controller = sdk.createWithdrawController(
+        accountPublicKey,
+        withdrawValue,
+        fee,
+        ethWalletProvider.getAccount(0) as any,
+        options
+    )
+
+    await controller.createProofs();
+    await controller.send();
+    await sdk.destroy();
 }
 
 async function run() {
     await setup();
-    await register();
+    // await register();
+    // await deposit();
+     await withdraw();
 }
 
 run();
