@@ -14,7 +14,8 @@ import {
     Permission,
     KeyStore,
     VanillaAztecWalletProvider,
-    ProofRequestOptions
+    ProofRequestOptions,
+    BridgeCallData
 } from '@aztec/sdk';
 
 
@@ -25,7 +26,7 @@ const ETHEREUM_HOST = 'http://localhost:8545',
 
 let sdk: AztecSdk,
     aztecWalletProvider: VanillaAztecWalletProvider,
-    alias,
+    alias: string,
     keystore: KeyStore,
     accountPublicKey: GrumpkinAddress,
     ethWalletProvider: WalletProvider;
@@ -67,7 +68,7 @@ async function setup() {
 async function register() {
     let assetId = 0;
     alias = randomBytes(8).toString('hex');
-    const depositValue = sdk.toBaseUnits(assetId, '0.005');
+    const depositValue = sdk.toBaseUnits(assetId, '1');
     const fee = (await sdk.getRegisterFees(assetId))[TxSettlementTime.INSTANT];
 
     const controller = sdk.createRegisterController(
@@ -88,14 +89,9 @@ async function register() {
     await controller.createProofs();
     await controller.sign();
     await controller.send();
-    // await controller.awaitSettlement();
-    let txIds = controller.getTxIds();
+    await controller.awaitSettlement();
 
-    txIds.map((txId) => {
-        console.log(txId)
-    })
-    await sdk.destroy();
-
+    // await sdk.destroy();
 }
 
 async function deposit() {
@@ -119,7 +115,7 @@ async function deposit() {
 
     await controller.sign();
     await controller.send();
-    await sdk.destroy();
+    // await sdk.destroy();
 }
 
 async function withdraw() {
@@ -145,14 +141,54 @@ async function withdraw() {
 
     await controller.createProofs();
     await controller.send();
-    await sdk.destroy();
+    // await sdk.destroy();
+}
+
+async function transfer(){
+    const assetId = 0;
+    const transferValue = sdk.toBaseUnits(assetId, '0.03');
+    const fee = (await sdk.getTransferFees(assetId))[TxSettlementTime.INSTANT];
+    let recipient = GrumpkinAddress.fromString('0x2b941164414f5450ab84a1f386d4a20c3de27333248ac788ddffafc0724b8cd626e8dd3ec4cbab8f3533b16d30511bbba966b254993d6c676dbdf1ed690f9075');
+
+    const controller = sdk.createTransferController(
+        accountPublicKey,
+        transferValue,
+        fee,
+        recipient,
+        // options
+      );
+    await controller.createProofs();
+    let txId = await controller.send();
+    console.log(txId);
+}
+
+async function bridge(){
+    const assetId = 0;
+    const bridgeValue = sdk.toBaseUnits(assetId, '0.03');
+    const lidoId = sdk.getBridgeAddressId(
+        EthAddress.fromString("")
+      );
+    const bridge = new BridgeCallData(lidoId, 0, 2, undefined, undefined, undefined);
+    const fee = (await sdk.getDefiFees(bridge))[TxSettlementTime.INSTANT];
+    const controller = sdk.createDefiController(
+      accountPublicKey,
+      bridge,
+      bridgeValue,
+      fee,
+      // options
+    );
+    await controller.createProofs();
+    let txId = await controller.send();
+    console.log(txId);
 }
 
 async function run() {
     await setup();
     // await register();
     // await deposit();
-     await withdraw();
+    // await withdraw();
+    await transfer();
+    // await bridge();
 }
 
 run();
