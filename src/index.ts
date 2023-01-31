@@ -165,6 +165,7 @@ async function transfer(){
 async function bridge(){
     const assetId = 0;
     const bridgeValue = sdk.toBaseUnits(assetId, '0.03');
+    sdk.getBridgeAddressId
     const lidoId = sdk.getBridgeAddressId(
         EthAddress.fromString("")
       );
@@ -187,7 +188,7 @@ async function run() {
     // await register();
     // await deposit();
     // await withdraw();
-    await transfer();
+    // await transfer();
     // await bridge();
 }
 
