@@ -3,4 +3,4 @@
 
 ## Requirements
 
-- Node version 18
+- Node.js version 18
