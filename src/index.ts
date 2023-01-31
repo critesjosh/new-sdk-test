@@ -186,7 +186,7 @@ async function bridge(){
 async function run() {
     await setup();
     // await register();
-    // await deposit();
+    await deposit();
     // await withdraw();
     // await transfer();
     // await bridge();

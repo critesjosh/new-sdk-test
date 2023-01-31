@@ -16,5 +16,8 @@
     "isomorphic-fetch": "^3.0.0",
     "ts-node": "^10.7.0",
     "typescript": "^4.9.4"
-  }
+  },
+  "resolutions": {
+    "@aztec/barretenberg": "2.2.0-alpha.1"
+  } 
 }
